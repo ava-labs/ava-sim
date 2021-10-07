@@ -105,13 +105,13 @@ func StartNetwork(ctx context.Context, pluginDir string, whitelistedSubnets stri
 		// shut down the signal go routine
 		signal.Stop(signals)
 		close(signals)
-	}
+	}()
 
 	g, gctx := errgroup.WithContext(ctx)
 	ggctx, cancel := context.WithCancel(gctx)
 	g.Go(func() error {
 		select {
-		case <-signal:
+		case <-signals:
 			cancel()
 		case <-ggctx.Done():
 		}

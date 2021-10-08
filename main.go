@@ -1,12 +1,12 @@
 package main
 
 import (
-	// "bufio"
 	"context"
 	"fmt"
 	"log"
-
-	// "os"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/ava-labs/vm-tester/manager"
@@ -27,26 +27,48 @@ const (
 func main() {
 	// start local network
 	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
 	g, gctx := errgroup.WithContext(ctx)
 	g.Go(func() error {
 		return manager.StartNetwork(gctx, pluginDir, whitelistedSubnets)
 	})
 	g.Go(func() error {
-		return setupNetwork()
+		return setupNetwork(gctx)
+	})
+	g.Go(func() error {
+		// register signals to kill the application
+		signals := make(chan os.Signal, 1)
+		signal.Notify(signals, syscall.SIGINT)
+		signal.Notify(signals, syscall.SIGTERM)
+		defer func() {
+			// shut down the signal go routine
+			signal.Stop(signals)
+			close(signals)
+		}()
+
+		select {
+		case <-signals:
+			cancel()
+		case <-gctx.Done():
+		}
+		return nil
 	})
 	log.Fatal(g.Wait())
 }
 
-func setupNetwork() error {
+func setupNetwork(ctx context.Context) error {
 	// wait for network to be bootstrapped
 	iClient := info.NewClient("http://localhost:9650", 10*time.Second)
-	fmt.Println("waiting for P-Chain to be bootstrapped")
 	for {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
 		bootstrapped, _ := iClient.IsBootstrapped("P")
 		if bootstrapped {
 			break
 		}
 
+		fmt.Println("waiting for P-Chain to be bootstrapped")
 		time.Sleep(1 * time.Second)
 	}
 
@@ -85,12 +107,15 @@ func setupNetwork() error {
 		panic(err)
 	}
 
-	fmt.Println("waiting for subnet creation tx to be accepted", subnetIDTx)
 	for {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
 		status, _ := client.GetTxStatus(subnetIDTx, true)
 		if status.Status == platformvm.Committed {
 			break
 		}
+		fmt.Println("waiting for subnet creation tx to be accepted", subnetIDTx)
 		time.Sleep(1 * time.Second)
 	}
 
@@ -118,12 +143,15 @@ func setupNetwork() error {
 		panic(err)
 	}
 
-	fmt.Println("waiting for add subnet validator tx to be accepted", txID)
 	for {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
 		status, _ := client.GetTxStatus(txID, true)
 		if status.Status == platformvm.Committed {
 			break
 		}
+		fmt.Println("waiting for add subnet validator tx to be accepted", txID)
 		time.Sleep(1 * time.Second)
 	}
 
@@ -132,12 +160,15 @@ func setupNetwork() error {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("waiting for create blockchain tx to be accepted", txID)
 	for {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
 		status, _ := client.GetTxStatus(txID, true)
 		if status.Status == platformvm.Committed {
 			break
 		}
+		fmt.Println("waiting for create blockchain tx to be accepted", txID)
 		time.Sleep(1 * time.Second)
 	}
 
@@ -158,12 +189,15 @@ func setupNetwork() error {
 	}
 	fmt.Println("blockchain created", blockchainID.String())
 
-	fmt.Println("waiting for validating status")
 	for {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
 		status, _ := client.GetBlockchainStatus(blockchainID.String())
 		if status == platformvm.Validating {
 			break
 		}
+		fmt.Println("waiting for validating status")
 		time.Sleep(15 * time.Second)
 	}
 	fmt.Println("validating blockchain", blockchainID)

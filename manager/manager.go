@@ -7,8 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/ava-labs/avalanchego/app/process"
 	"github.com/ava-labs/avalanchego/node"
@@ -102,26 +100,7 @@ func StartNetwork(ctx context.Context, pluginDir string, whitelistedSubnets stri
 		nodeConfigs[i] = nodeConfig
 	}
 
-	// register signals to kill the application
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT)
-	signal.Notify(signals, syscall.SIGTERM)
-	defer func() {
-		// shut down the signal go routine
-		signal.Stop(signals)
-		close(signals)
-	}()
-
 	g, gctx := errgroup.WithContext(ctx)
-	ggctx, cancel := context.WithCancel(gctx)
-	g.Go(func() error {
-		select {
-		case <-signals:
-			cancel()
-		case <-ggctx.Done():
-		}
-		return nil
-	})
 	for _, config := range nodeConfigs {
 		c := config
 		g.Go(func() error {

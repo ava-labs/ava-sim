@@ -85,6 +85,7 @@ func main() {
 
 func setupNetwork(ctx context.Context, vmGenesis string) error {
 	// wait for network to be bootstrapped
+	// TODO: wait for all URLS to be good
 	iClient := info.NewClient("http://localhost:9650", 10*time.Second)
 	for {
 		if ctx.Err() != nil {
@@ -160,7 +161,7 @@ func setupNetwork(ctx context.Context, vmGenesis string) error {
 			userPass,
 			[]string{fundedAddress}, fundedAddress,
 			subnetID, nodeID, 30,
-			uint64(time.Now().Add(5*time.Minute).Unix()),
+			uint64(time.Now().Add(1*time.Minute).Unix()),
 			uint64(time.Now().Add(30*24*time.Hour).Unix()),
 		)
 		if err != nil {

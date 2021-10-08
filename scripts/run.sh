@@ -24,14 +24,18 @@ fi
 config_dir=''
 vm_path=''
 vm_genesis=''
-while getopts config-dir:vm-path:vm-genesis: flag
-do
+for flag in "$@"; do
   case "${flag}" in
-          config-dir) config_dir=${OPTARG}
+          --config-dir=*)
+            config_dir="${flag#*=}"
                   ;;
-          vm-path) vm_path=${OPTARG}
+          --vm-path=*)
+            vm_path="${flag#*=}"
+            shift
                    ;;
-          vm-genesis) vm_genesis=${OPTARG}
+          --vm-genesis=*)
+            vm_genesis="${flag#*=}"
+            shift
                    ;;
           *) echo "Invalid option: -$flag" ;;
   esac

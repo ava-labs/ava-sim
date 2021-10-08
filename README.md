@@ -1,6 +1,6 @@
-- [ ] pick name
+- [ ] pick name (ICE BOX, SNOWSTORM, BLIZZARD)
 - [ ] colored logs for CLI messages
-- [ ] pre-compile coreth (so don't ned to go setup plugins dir)
-- [ ] script to just point to binary (move to correct name automatically)
-- [ ] if no binary location provided on startup, just run without subnet mode
-- [ ] print tmp location at end (don't remove)
+- [x] pre-compile coreth (so don't ned to go setup plugins dir)
+- [x] script to just point to binary (move to correct name automatically)
+- [x] if no binary location provided on startup, just run without subnet mode
+- [x] print tmp location at end (don't remove)

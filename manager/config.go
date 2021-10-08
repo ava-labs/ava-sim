@@ -109,7 +109,8 @@ type Flags struct {
 	WhitelistedSubnets string
 
 	// Config
-	ConfigFile string
+	ConfigFile     string
+	ChainConfigDir string
 
 	// IPCS
 	IPCSChainIDs string
@@ -344,6 +345,7 @@ func flagsToArgs(flags Flags) []string {
 		"--whitelisted-subnets=" + flags.WhitelistedSubnets,
 		"--api-health-enabled=" + strconv.FormatBool(flags.APIHealthEnabled),
 		"--config-file=" + flags.ConfigFile,
+		"--chain-config-dir=" + flags.ChainConfigDir,
 		"--api-info-enabled=" + strconv.FormatBool(flags.APIInfoEnabled),
 		"--ipcs-chain-ids=" + flags.IPCSChainIDs,
 		"--ipcs-path=" + flags.IPCSPath,

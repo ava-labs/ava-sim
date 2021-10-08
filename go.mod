@@ -4,7 +4,6 @@ go 1.17
 
 require (
 	github.com/ava-labs/avalanchego v1.6.1
-	github.com/nmrshll/go-cp v0.0.0-20180115193924-61436d3b7cfa
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 )
 
@@ -12,7 +11,6 @@ require (
 	github.com/AppsFlyer/go-sundheit v0.2.0 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
-	github.com/ava-labs/coreth v0.7.0-rc.14 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcutil v1.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect

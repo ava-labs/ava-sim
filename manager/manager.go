@@ -6,6 +6,7 @@ import (
 	_ "embed"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,7 +14,6 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	aConstants "github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/hashing"
-	cp "github.com/nmrshll/go-cp"
 
 	"github.com/ava-labs/vm-tester/constants"
 
@@ -60,6 +60,31 @@ var (
 	nodeKeys  = [][]byte{keys1StakerKey, keys2StakerKey, keys3StakerKey, keys4StakerKey, keys5StakerKey}
 )
 
+func Copy(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Grant permission to copy
+	if err := os.Chmod(dst, 0777); err != nil {
+		return err
+	}
+
+	_, err = io.Copy(out, in)
+	if err != nil {
+		return err
+	}
+	return out.Close()
+}
+
 func loadNodeID(stakeCert []byte) (string, error) {
 	block, _ := pem.Decode(stakeCert)
 	cert, err := x509.ParseCertificate(block.Bytes)
@@ -103,15 +128,13 @@ func StartNetwork(ctx context.Context, configDir, vmPath string) error {
 	if err := os.MkdirAll(pluginsDir, os.FileMode(0777)); err != nil {
 		panic(err)
 	}
-	if err := cp.CopyFile("system-plugins/evm", fmt.Sprintf("%s/evm", pluginsDir)); err != nil {
+	if err := Copy("system-plugins/evm", fmt.Sprintf("%s/evm", pluginsDir)); err != nil {
 		panic(err)
 	}
-	os.Chmod(fmt.Sprintf("%s/evm", pluginsDir), 0777)
 	if len(vmPath) > 0 {
-		if err := cp.CopyFile(vmPath, fmt.Sprintf("%s/%s", pluginsDir, constants.VMID)); err != nil {
+		if err := Copy(vmPath, fmt.Sprintf("%s/%s", pluginsDir, constants.VMID)); err != nil {
 			panic(err)
 		}
-		os.Chmod(fmt.Sprintf("%s/%s", pluginsDir, constants.VMID), 0777)
 	}
 
 	nodeConfigs := make([]node.Config, numNodes)

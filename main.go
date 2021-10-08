@@ -132,6 +132,7 @@ func setupNetwork(ctx context.Context) error {
 	if err != nil {
 		panic(err)
 	}
+	// TODO: add all validators on subnet
 	txID, err := client.AddSubnetValidator(
 		userPass,
 		[]string{fundedAddress}, fundedAddress,

@@ -2,9 +2,15 @@ package main
 
 import (
 	// "bufio"
+	"context"
 	"fmt"
+	"log"
+
 	// "os"
 	"time"
+
+	"github.com/ava-labs/vm-tester/manager"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/api/info"
@@ -13,22 +19,34 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm"
 )
 
-// pre-requisite
-// * build timestampvm
+const (
+	pluginDir          = "/Users/patrickogrady/code/avalanchego-internal/build/plugins"
+	whitelistedSubnets = "p4jUwqZsA2LuSftroCd3zb4ytH8W99oXKuKVZdsty7eQ3rXD6"
+)
 
 func main() {
 	// start local network
-	// runscript scripts/five_node_staking.lua (modify gossip frequency)
+	ctx := context.Background()
+	g, gctx := errgroup.WithContext(ctx)
+	g.Go(func() error {
+		return manager.StartNetwork(gctx, pluginDir, whitelistedSubnets)
+	})
+	g.Go(func() error {
+		return setupNetwork()
+	})
+	log.Fatal(g.Wait())
+}
 
+func setupNetwork() error {
 	// wait for network to be bootstrapped
 	iClient := info.NewClient("http://localhost:9650", 10*time.Second)
+	fmt.Println("waiting for P-Chain to be bootstrapped")
 	for {
 		bootstrapped, _ := iClient.IsBootstrapped("P")
 		if bootstrapped {
 			break
 		}
 
-		fmt.Println("waiting for P-Chain to be bootstrapped")
 		time.Sleep(1 * time.Second)
 	}
 
@@ -67,12 +85,12 @@ func main() {
 		panic(err)
 	}
 
+	fmt.Println("waiting for subnet creation tx to be accepted", subnetIDTx)
 	for {
 		status, _ := client.GetTxStatus(subnetIDTx, true)
 		if status.Status == platformvm.Committed {
 			break
 		}
-		fmt.Println("waiting for subnet creation tx to be accepted", subnetIDTx)
 		time.Sleep(1 * time.Second)
 	}
 
@@ -100,35 +118,26 @@ func main() {
 		panic(err)
 	}
 
+	fmt.Println("waiting for add subnet validator tx to be accepted", txID)
 	for {
 		status, _ := client.GetTxStatus(txID, true)
 		if status.Status == platformvm.Committed {
 			break
 		}
-		fmt.Println("waiting for add subnet validator tx to be accepted", txID)
 		time.Sleep(1 * time.Second)
 	}
-
-	// whitelist subnet (do from API?)
-	// fmt.Println("whitelist", subnetID)
-	// fmt.Print("Press 'Enter' to continue...")
-	// bufio.NewReader(os.Stdin).ReadBytes('\n')
-	// Always: p4jUwqZsA2LuSftroCd3zb4ytH8W99oXKuKVZdsty7eQ3rXD6
-
-	// create genesis
-	// hardcoded: fP1vxkpyLWnH9dD6BQA ("helloworld")
 
 	// create blockchain
 	txID, err = client.CreateBlockchain(userPass, []string{fundedAddress}, fundedAddress, rSubnetID, "tGas3T58KzdjLHhBDMnH2TvrddhqTji5iZAMZ3RXs2NLpSnhH", []string{}, "my vm", []byte("fP1vxkpyLWnH9dD6BQA"))
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("waiting for create blockchain tx to be accepted", txID)
 	for {
 		status, _ := client.GetTxStatus(txID, true)
 		if status.Status == platformvm.Committed {
 			break
 		}
-		fmt.Println("waiting for create blockchain tx to be accepted", txID)
 		time.Sleep(1 * time.Second)
 	}
 
@@ -149,15 +158,14 @@ func main() {
 	}
 	fmt.Println("blockchain created", blockchainID.String())
 
+	fmt.Println("waiting for validating status")
 	for {
 		status, _ := client.GetBlockchainStatus(blockchainID.String())
 		if status == platformvm.Validating {
 			break
 		}
-		fmt.Println("waiting for validating status, got", status)
 		time.Sleep(15 * time.Second)
 	}
 	fmt.Println("validating blockchain", blockchainID)
-
-	// TODO: interact with blockchain
+	return nil
 }

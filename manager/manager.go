@@ -72,6 +72,9 @@ func Copy(src, dst string) error {
 		return err
 	}
 	defer out.Close()
+	if err := os.Chmod(dst, 0777); err != nil {
+		return err
+	}
 
 	_, err = io.Copy(out, in)
 	if err != nil {

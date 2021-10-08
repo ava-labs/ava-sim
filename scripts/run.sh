@@ -11,11 +11,14 @@ if [ ! -d "system-plugins" ]
 then
   echo "Building Coreth @ ${coreth_version} ..."
   go get "github.com/ava-labs/coreth@$coreth_version"
-  go build -ldflags "-X github.com/ava-labs/coreth/plugin/evm.Version=$coreth_version" -o "$evm_path" "plugin/*.go"
+  go build -ldflags "-X github.com/ava-labs/coreth/plugin/evm.Version=$coreth_version" -o "$evm_path" "plugin/*"
   go mod tidy
 fi
 
 # Config Dir, VM Location, Genesis Location
+config_dir=''
+vm_path=''
+vm_genesis=''
 while getopts config-dir:vm-path:vm-genesis: flag
 do
   case "${flag}" in

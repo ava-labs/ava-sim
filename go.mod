@@ -11,6 +11,7 @@ require (
 	github.com/AppsFlyer/go-sundheit v0.2.0 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
+	github.com/ava-labs/coreth v0.7.0-rc.14 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcutil v1.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect

@@ -2,11 +2,20 @@ package manager
 
 import (
 	"context"
+	"crypto/x509"
 	_ "embed"
+	"encoding/pem"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/ava-labs/avalanchego/ids"
+	aConstants "github.com/ava-labs/avalanchego/utils/constants"
+	"github.com/ava-labs/avalanchego/utils/hashing"
+
+	"github.com/ava-labs/vm-tester/constants"
 
 	"github.com/ava-labs/avalanchego/app/process"
 	"github.com/ava-labs/avalanchego/node"
@@ -46,19 +55,81 @@ var (
 	keys5StakerCrt []byte
 	//go:embed certs/keys5/staker.key
 	keys5StakerKey []byte
+
+	nodeCerts = [][]byte{keys1StakerCrt, keys2StakerCrt, keys3StakerCrt, keys4StakerCrt, keys5StakerCrt}
+	nodeKeys  = [][]byte{keys1StakerKey, keys2StakerKey, keys3StakerKey, keys4StakerKey, keys5StakerKey}
 )
 
-func StartNetwork(ctx context.Context, pluginDir string, whitelistedSubnets string) error {
+func Copy(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, in)
+	if err != nil {
+		return err
+	}
+	return out.Close()
+}
+
+func loadNodeID(stakeCert []byte) (string, error) {
+	block, _ := pem.Decode(stakeCert)
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return "", fmt.Errorf("%w: problem parsing staking certificate", err)
+	}
+
+	id, err := ids.ToShortID(hashing.PubkeyBytesToAddress(cert.Raw))
+	if err != nil {
+		return "", fmt.Errorf("%w: problem deriving staker ID from certificate", err)
+	}
+
+	return id.PrefixedString(aConstants.NodeIDPrefix), nil
+}
+
+func NodeIDs() []string {
+	nodeCerts := [][]byte{keys1StakerCrt, keys2StakerCrt, keys3StakerCrt, keys4StakerCrt, keys5StakerCrt}
+	nodeIDs := make([]string, numNodes)
+	for i, cert := range nodeCerts {
+		id, err := loadNodeID(cert)
+		if err != nil {
+			panic(err)
+		}
+		nodeIDs[i] = id
+	}
+	return nodeIDs
+}
+
+func StartNetwork(ctx context.Context, configDir, vmPath string) error {
 	dir, err := ioutil.TempDir("", "vm-tester")
 	if err != nil {
 		panic(err)
 	}
 	log.Println("created tmp dir", dir)
-	// defer os.RemoveAll(dir)
+
+	// Copy files into custom plugins
+	pluginsDir := fmt.Sprintf("%s/plugins", dir)
+	if err := os.MkdirAll(pluginsDir, os.FileMode(0777)); err != nil {
+		panic(err)
+	}
+	if err := Copy("system-plugins/evm", fmt.Sprintf("%s/evm", pluginsDir)); err != nil {
+		panic(err)
+	}
+	if len(vmPath) > 0 {
+		if err := Copy(vmPath, fmt.Sprintf("%s/%s", pluginsDir, constants.VMID)); err != nil {
+			panic(err)
+		}
+	}
 
 	nodeConfigs := make([]node.Config, numNodes)
-	nodeCerts := [][]byte{keys1StakerCrt, keys2StakerCrt, keys3StakerCrt, keys4StakerCrt, keys5StakerCrt}
-	nodeKeys := [][]byte{keys1StakerKey, keys2StakerKey, keys3StakerKey, keys4StakerKey, keys5StakerKey}
 	for i := 0; i < numNodes; i++ {
 		nodeDir := fmt.Sprintf("%s/node%d", dir, i+1)
 		if err := os.MkdirAll(nodeDir, os.FileMode(0777)); err != nil {
@@ -88,16 +159,19 @@ func StartNetwork(ctx context.Context, pluginDir string, whitelistedSubnets stri
 			df.BootstrapIPs = ""
 			df.BootstrapIDs = ""
 		}
-		df.WhitelistedSubnets = whitelistedSubnets
+		if len(configDir) > 0 {
+			df.ChainConfigDir = configDir
+		}
+		if len(vmPath) > 0 {
+			df.WhitelistedSubnets = constants.WhitelistedSubnets
+		}
 		df.StakingTLSCertFile = certFile
 		df.StakingTLSKeyFile = keyFile
-		df.WhitelistedSubnets = whitelistedSubnets
-		fmt.Println(df)
-		nodeConfig, err := createNodeConfig(pluginDir, flagsToArgs(df))
+		nodeConfig, err := createNodeConfig(pluginsDir, flagsToArgs(df))
 		if err != nil {
 			panic(err)
 		}
-		nodeConfig.PluginDir = pluginDir
+		nodeConfig.PluginDir = pluginsDir
 		nodeConfigs[i] = nodeConfig
 	}
 

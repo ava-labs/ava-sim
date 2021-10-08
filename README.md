@@ -1,4 +1,4 @@
-- [ ] pick name
+- [ ] pick name (ICE BOX, SNOWSTORM, BLIZZARD)
 - [ ] colored logs for CLI messages
 - [ ] pre-compile coreth (so don't ned to go setup plugins dir)
 - [ ] script to just point to binary (move to correct name automatically)

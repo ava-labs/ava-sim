@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
+	"path"
 	"syscall"
 	"time"
 
+	"github.com/ava-labs/vm-tester/constants"
 	"github.com/ava-labs/vm-tester/manager"
 	"golang.org/x/sync/errgroup"
 
@@ -19,22 +22,38 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm"
 )
 
-const (
-	pluginDir          = "/Users/patrickogrady/code/avalanchego-internal/build/plugins"
-	whitelistedSubnets = "p4jUwqZsA2LuSftroCd3zb4ytH8W99oXKuKVZdsty7eQ3rXD6"
-)
-
 func main() {
+	// get custom plugin dir
+	// TODO: use flags
+	args := os.Args
+	var configDir, vmPath, vmGenesis string
+	if len(args) > 1 {
+		configDir = path.Clean(args[1])
+	}
+	if len(args) == 4 {
+		vmPath = path.Clean(args[2])
+		if _, err := os.Stat(vmPath); os.IsNotExist(err) {
+			panic(fmt.Sprintf("%s does not exist", vmPath))
+		}
+		vmGenesis = path.Clean(args[3])
+		if _, err := os.Stat(vmGenesis); os.IsNotExist(err) {
+			panic(fmt.Sprintf("%s does not exist", vmGenesis))
+		}
+	}
+
 	// start local network
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	g, gctx := errgroup.WithContext(ctx)
 	g.Go(func() error {
-		return manager.StartNetwork(gctx, pluginDir, whitelistedSubnets)
+		return manager.StartNetwork(gctx, configDir, vmPath)
 	})
-	g.Go(func() error {
-		return setupNetwork(gctx)
-	})
+	// only setup network if customVM exists
+	if len(vmPath) > 0 {
+		g.Go(func() error {
+			return setupNetwork(gctx, vmGenesis)
+		})
+	}
 	g.Go(func() error {
 		// register signals to kill the application
 		signals := make(chan os.Signal, 1)
@@ -56,7 +75,7 @@ func main() {
 	log.Fatal(g.Wait())
 }
 
-func setupNetwork(ctx context.Context) error {
+func setupNetwork(ctx context.Context, vmGenesis string) error {
 	// wait for network to be bootstrapped
 	iClient := info.NewClient("http://localhost:9650", 10*time.Second)
 	for {
@@ -127,37 +146,41 @@ func setupNetwork(ctx context.Context) error {
 	rSubnetID := subnets[0].ID
 	subnetID := rSubnetID.String()
 
-	// add validator to subnet
-	nodeID, err := iClient.GetNodeID()
-	if err != nil {
-		panic(err)
-	}
-	// TODO: add all validators on subnet
-	txID, err := client.AddSubnetValidator(
-		userPass,
-		[]string{fundedAddress}, fundedAddress,
-		subnetID, nodeID, 30,
-		uint64(time.Now().Add(5*time.Minute).Unix()),
-		uint64(time.Now().Add(30*24*time.Hour).Unix()),
-	)
-	if err != nil {
-		panic(err)
-	}
+	// Add all validators to subnet (equal weight)
+	for _, nodeID := range manager.NodeIDs() {
+		txID, err := client.AddSubnetValidator(
+			userPass,
+			[]string{fundedAddress}, fundedAddress,
+			subnetID, nodeID, 30,
+			uint64(time.Now().Add(5*time.Minute).Unix()),
+			uint64(time.Now().Add(30*24*time.Hour).Unix()),
+		)
+		if err != nil {
+			panic(err)
+		}
 
-	for {
-		if ctx.Err() != nil {
-			return ctx.Err()
+		for {
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+			status, _ := client.GetTxStatus(txID, true)
+			if status.Status == platformvm.Committed {
+				break
+			}
+			fmt.Println("waiting for add subnet validator tx to be accepted", txID)
+			time.Sleep(1 * time.Second)
 		}
-		status, _ := client.GetTxStatus(txID, true)
-		if status.Status == platformvm.Committed {
-			break
-		}
-		fmt.Println("waiting for add subnet validator tx to be accepted", txID)
-		time.Sleep(1 * time.Second)
 	}
 
 	// create blockchain
-	txID, err = client.CreateBlockchain(userPass, []string{fundedAddress}, fundedAddress, rSubnetID, "tGas3T58KzdjLHhBDMnH2TvrddhqTji5iZAMZ3RXs2NLpSnhH", []string{}, "my vm", []byte("fP1vxkpyLWnH9dD6BQA"))
+	genesis, err := ioutil.ReadFile(vmGenesis)
+	if err != nil {
+		panic(err)
+	}
+	txID, err := client.CreateBlockchain(
+		userPass, []string{fundedAddress}, fundedAddress, rSubnetID,
+		constants.VMID, []string{}, constants.VMName, genesis,
+	)
 	if err != nil {
 		panic(err)
 	}

@@ -1,0 +1,7 @@
+- [ ] pick name
+- [ ] colored logs for CLI messages
+- [ ] pre-compile coreth (so don't ned to go setup plugins dir)
+- [ ] script to just point to binary (move to correct name automatically)
+- [ ] if no binary location provided on startup, just run without subnet mode
+- [ ] use node config directly instead of complicated flag passing
+- [ ] print tmp location at end (don't remove)

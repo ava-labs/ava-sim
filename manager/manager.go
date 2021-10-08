@@ -73,6 +73,7 @@ func StartNetwork(ctx context.Context, pluginDir string, whitelistedSubnets stri
 			panic(err)
 		}
 
+		// TODO: create config directly instead of using flags
 		df := defaultFlags()
 		df.LogLevel = "info"
 		df.LogDir = fmt.Sprintf("%s/logs", nodeDir)

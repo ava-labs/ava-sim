@@ -114,6 +114,9 @@ func StartNetwork(ctx context.Context, configDir, vmPath string) error {
 		panic(err)
 	}
 	log.Println("created tmp dir", dir)
+	defer func() {
+		log.Println("created tmp dir", dir)
+	}()
 
 	// Copy files into custom plugins
 	pluginsDir := fmt.Sprintf("%s/plugins", dir)
@@ -144,7 +147,6 @@ func StartNetwork(ctx context.Context, configDir, vmPath string) error {
 			panic(err)
 		}
 
-		// TODO: create config directly instead of using flags
 		df := defaultFlags()
 		df.LogLevel = "info"
 		df.LogDir = fmt.Sprintf("%s/logs", nodeDir)

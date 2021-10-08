@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -23,25 +24,32 @@ import (
 )
 
 func main() {
-	// get custom plugin dir
-	// TODO: use flags
-	args := os.Args
+	// Parse Args
+	rawConfigDir := flag.String("config-dir", "", "directory for all VM configs")
+	rawVMPath := flag.String("vm-path", "", "location of custom VM binary")
+	rawVMGenesis := flag.String("vm-genesis", "", "location of custom VM genesis")
+	flag.Parse()
 	var configDir, vmPath, vmGenesis string
-	if len(args) > 1 {
-		configDir = path.Clean(args[1])
+	if len(*rawConfigDir) > 1 {
+		configDir = path.Clean(*rawConfigDir)
+		if _, err := os.Stat(configDir); os.IsNotExist(err) {
+			panic(fmt.Sprintf("%s does not exist", configDir))
+		}
 	}
-	if len(args) == 4 {
-		vmPath = path.Clean(args[2])
+	if len(*rawVMPath) > 1 {
+		vmPath = path.Clean(*rawVMPath)
 		if _, err := os.Stat(vmPath); os.IsNotExist(err) {
 			panic(fmt.Sprintf("%s does not exist", vmPath))
 		}
-		vmGenesis = path.Clean(args[3])
+	}
+	if len(*rawVMGenesis) > 1 {
+		vmGenesis = path.Clean(*rawVMGenesis)
 		if _, err := os.Stat(vmGenesis); os.IsNotExist(err) {
 			panic(fmt.Sprintf("%s does not exist", vmGenesis))
 		}
 	}
 
-	// start local network
+	// Start local network
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	g, gctx := errgroup.WithContext(ctx)

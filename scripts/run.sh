@@ -16,4 +16,17 @@ then
 fi
 
 # Config Dir, VM Location, Genesis Location
-go run main.go "$1" "$2" "$3"
+while getopts config-dir:vm-path:vm-genesis: flag
+do
+  case "${flag}" in
+          config-dir) config_dir=${OPTARG}
+                  ;;
+          vm-path) vm_path=${OPTARG}
+                   ;;
+          vm-genesis) vm_genesis=${OPTARG}
+                   ;;
+          *) echo "Invalid option: -$flag" ;;
+  esac
+done
+
+go run main.go "--config-dir=${config_dir}" "--vm-path=${vm_path}" "--vm-genesis=${vm_genesis}"

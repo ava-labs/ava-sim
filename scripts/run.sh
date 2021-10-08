@@ -11,7 +11,7 @@ if [ ! -d "system-plugins" ]
 then
   echo "Building Coreth @ ${coreth_version} ..."
   go get "github.com/ava-labs/coreth@$coreth_version"
-  go build -ldflags "-X github.com/ava-labs/coreth/plugin/evm.Version=$coreth_version" -o "$evm_path" "plugin/*"
+  go build -ldflags "-X github.com/ava-labs/coreth/plugin/evm.Version=$coreth_version" -o "$evm_path" "plugin/*.go"
   go mod tidy
 fi
 

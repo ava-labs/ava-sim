@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/ava-labs/avalanchego v1.6.1
+	github.com/nmrshll/go-cp v0.0.0-20180115193924-61436d3b7cfa
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 )
 

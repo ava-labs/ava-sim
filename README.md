@@ -1,10 +1,76 @@
-- [ ] pick name (ICE BOX, SNOWSTORM, BLIZZARD)
-- [ ] colored logs for CLI messages (github.com/fatih/color)
-- [ ] Use shared bootstrap checker to say when network is ready to interact
-  with (also print out accessible endpoints)
-- [x] pre-compile coreth (so don't ned to go setup plugins dir)
-- [x] script to just point to binary (move to correct name automatically)
-- [x] if no binary location provided on startup, just run without subnet mode
-- [x] print tmp location at end (don't remove)
+<div align="center">
+  <img src="resources/AvalancheLogoRed.png?raw=true">
+</div>
 
-## FOCUS JUST ON SUBNETS? DON'T WANT TO ALLOW RUNNING OUTSIDE OF THAT
+# ava-sim
+`ava-sim` makes it easy for anyone to spin up a local Avalanche network to use
+standard APIs or to test a custom VM.
+
+### Prerequisites
+You must have [Golang](https://golang.org/doc/install) >= 1.16 and a configured
+[$GOPATH](https://github.com/golang/go/wiki/SettingGOPATH).
+
+## Standard Network
+`./scripts/run.sh`
+
+```txt
+standard VM endpoints now accessible at:
+NodeID-7Xhw2mDxuDS44j42TCB6U5579esbSt3Lg: http://127.0.0.1:9650
+NodeID-MFrZFVCXPv5iCn6M9K6XduxGTYp891xXZ: http://127.0.0.1:9652
+NodeID-NFBbbJ4qCmNaCzeW7sxErhvWqvEQMnYcN: http://127.0.0.1:9654
+NodeID-GWPcbFJZFfZreETSoWjPimr846mXEKCtu: http://127.0.0.1:9656
+NodeID-P7oB2McjBGgW2NXXWVYjV8JEDFoW9xDE5: http://127.0.0.1:9658
+```
+
+## Custom VM (Subnet)
+https://docs.avax.network/build/tutorials/platform/create-custom-blockchain
+`./scripts/run.sh [vm] [vm-genesis]`
+
+### Example: [TimestampVM](https://github.com/ava-labs/timestampvm)
+`./scripts/subnet-example.sh`
+
+```txt
+NodeID-7Xhw2mDxuDS44j42TCB6U5579esbSt3Lg validating blockchain 28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+NodeID-MFrZFVCXPv5iCn6M9K6XduxGTYp891xXZ validating blockchain 28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+NodeID-NFBbbJ4qCmNaCzeW7sxErhvWqvEQMnYcN validating blockchain 28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+NodeID-GWPcbFJZFfZreETSoWjPimr846mXEKCtu validating blockchain 28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+NodeID-P7oB2McjBGgW2NXXWVYjV8JEDFoW9xDE5 validating blockchain 28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+```
+
+```txt
+NodeID-7Xhw2mDxuDS44j42TCB6U5579esbSt3Lg bootstrapped 28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+NodeID-MFrZFVCXPv5iCn6M9K6XduxGTYp891xXZ bootstrapped 28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+NodeID-NFBbbJ4qCmNaCzeW7sxErhvWqvEQMnYcN bootstrapped 28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+NodeID-GWPcbFJZFfZreETSoWjPimr846mXEKCtu bootstrapped 28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+NodeID-P7oB2McjBGgW2NXXWVYjV8JEDFoW9xDE5 bootstrapped 28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+```
+
+```txt
+Custom VM endpoints now accessible at:
+NodeID-7Xhw2mDxuDS44j42TCB6U5579esbSt3Lg: http://127.0.0.1:9650/ext/bc/28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+NodeID-MFrZFVCXPv5iCn6M9K6XduxGTYp891xXZ: http://127.0.0.1:9652/ext/bc/28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+NodeID-NFBbbJ4qCmNaCzeW7sxErhvWqvEQMnYcN: http://127.0.0.1:9654/ext/bc/28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+NodeID-GWPcbFJZFfZreETSoWjPimr846mXEKCtu: http://127.0.0.1:9656/ext/bc/28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+NodeID-P7oB2McjBGgW2NXXWVYjV8JEDFoW9xDE5: http://127.0.0.1:9658/ext/bc/28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+```
+
+https://docs.avax.network/build/tutorials/platform/create-custom-blockchain#interact-with-the-new-blockchain
+
+```txt
+curl -X POST --data '{
+    "jsonrpc": "2.0",
+    "method": "timestampvm.getBlock",
+    "params":{
+        "id":""
+    },
+    "id": 1
+}' -H 'content-type:application/json;' 127.0.0.1:9650/ext/bc/28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+```
+
+## What this is NOT
+This tool is not intended to be a full-fledged node configurator. Rather it is
+more for testing interactions with a standard configuration and testing custom
+VMs.
+
+[avash](https://github.com/ava-labs/avash) provides similar functionality
+to `ava-sim` but requires ...

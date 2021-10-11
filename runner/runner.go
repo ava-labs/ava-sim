@@ -23,7 +23,7 @@ const (
 	waitTime   = 1 * time.Second
 
 	validatorWeight    = 50
-	validatorStartDiff = 1 * time.Minute
+	validatorStartDiff = 30 * time.Second
 	validatorEndDiff   = 30 * 24 * time.Hour // 30 days
 )
 

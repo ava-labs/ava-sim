@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/ava-labs/avalanchego v1.6.1
+	github.com/fatih/color v1.7.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 )
 
@@ -16,7 +17,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v3 v3.0.0-20200627015759-01fd2de07837 // indirect
-	github.com/fatih/color v1.7.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/golang-jwt/jwt v3.2.1+incompatible // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -26,7 +26,7 @@ require (
 	github.com/gorilla/rpc v1.2.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/go-hclog v0.14.1 // indirect
-	github.com/hashicorp/go-plugin v1.3.0 // indirect
+	github.com/hashicorp/go-plugin v1.4.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb // indirect
 	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect

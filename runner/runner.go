@@ -28,6 +28,7 @@ const (
 )
 
 func SetupSubnet(ctx context.Context, vmGenesis string) error {
+	color.Cyan("creating subnet")
 	var (
 		nodeURLs = manager.NodeURLs()
 		nodeIDs  = manager.NodeIDs()
@@ -161,7 +162,6 @@ func SetupSubnet(ctx context.Context, vmGenesis string) error {
 	if blockchainID == (ids.ID{}) {
 		return errors.New("could not find blockchain")
 	}
-	color.Cyan("blockchain %s created", blockchainID.String())
 
 	// Ensure all nodes are validating subnet
 	for i, url := range nodeURLs {

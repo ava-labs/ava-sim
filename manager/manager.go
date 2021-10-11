@@ -2,39 +2,25 @@ package manager
 
 import (
 	"context"
-	"crypto/x509"
 	_ "embed"
-	"encoding/pem"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"time"
 
-	"github.com/ava-labs/avalanchego/ids"
-	aConstants "github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/avalanchego/utils/hashing"
-	"github.com/fatih/color"
-
 	"github.com/ava-labs/vm-tester/constants"
+	"github.com/ava-labs/vm-tester/utils"
 
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/app/process"
 	"github.com/ava-labs/avalanchego/node"
+	"github.com/fatih/color"
 	"golang.org/x/sync/errgroup"
 )
 
 const (
-	bootstrapID  = "NodeID-7Xhw2mDxuDS44j42TCB6U5579esbSt3Lg"
-	bootstrapIP  = "127.0.0.1:9651"
-	numNodes     = 5
-	baseHTTPPort = 9650
-	httpTimeout  = 10 * time.Second
-)
-
-var (
-	chains = []string{"P", "C", "X"}
+	bootstrapID = "NodeID-7Xhw2mDxuDS44j42TCB6U5579esbSt3Lg"
+	bootstrapIP = "127.0.0.1:9651"
 )
 
 // Embed certs in binary and write to tmp file on startup (full binary)
@@ -68,51 +54,11 @@ var (
 	nodeKeys  = [][]byte{keys1StakerKey, keys2StakerKey, keys3StakerKey, keys4StakerKey, keys5StakerKey}
 )
 
-func Copy(src, dst string) error {
-	in, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer in.Close()
-
-	out, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	// Grant permission to copy
-	if err := os.Chmod(dst, 0777); err != nil {
-		return err
-	}
-
-	_, err = io.Copy(out, in)
-	if err != nil {
-		return err
-	}
-	return out.Close()
-}
-
-func loadNodeID(stakeCert []byte) (string, error) {
-	block, _ := pem.Decode(stakeCert)
-	cert, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		return "", fmt.Errorf("%w: problem parsing staking certificate", err)
-	}
-
-	id, err := ids.ToShortID(hashing.PubkeyBytesToAddress(cert.Raw))
-	if err != nil {
-		return "", fmt.Errorf("%w: problem deriving staker ID from certificate", err)
-	}
-
-	return id.PrefixedString(aConstants.NodeIDPrefix), nil
-}
-
 func NodeIDs() []string {
 	nodeCerts := [][]byte{keys1StakerCrt, keys2StakerCrt, keys3StakerCrt, keys4StakerCrt, keys5StakerCrt}
-	nodeIDs := make([]string, numNodes)
+	nodeIDs := make([]string, constants.NumNodes)
 	for i, cert := range nodeCerts {
-		id, err := loadNodeID(cert)
+		id, err := utils.LoadNodeID(cert)
 		if err != nil {
 			panic(err)
 		}
@@ -121,43 +67,50 @@ func NodeIDs() []string {
 	return nodeIDs
 }
 
+func NodeURLs() []string {
+	urls := make([]string, constants.NumNodes)
+	for i := 0; i < constants.NumNodes; i++ {
+		urls[i] = fmt.Sprintf("http://127.0.0.1:%d", constants.BaseHTTPPort+i*2)
+	}
+	return urls
+}
+
 func StartNetwork(ctx context.Context, configDir, vmPath string, bootstrapped chan struct{}) error {
 	dir, err := ioutil.TempDir("", "vm-tester")
 	if err != nil {
 		panic(err)
 	}
-	log.Println("created tmp dir", dir)
+	color.Cyan("tmp dir located at: %s", dir)
 	defer func() {
-		log.Println("created tmp dir", dir)
+		color.Cyan("tmp dir located at: %s", dir)
 	}()
 
 	// Copy files into custom plugins
 	pluginsDir := fmt.Sprintf("%s/plugins", dir)
-	if err := os.MkdirAll(pluginsDir, os.FileMode(0777)); err != nil {
+	if err := os.MkdirAll(pluginsDir, os.FileMode(constants.FilePerms)); err != nil {
 		panic(err)
 	}
-	if err := Copy("system-plugins/evm", fmt.Sprintf("%s/evm", pluginsDir)); err != nil {
+	if err := utils.CopyFile("system-plugins/evm", fmt.Sprintf("%s/evm", pluginsDir)); err != nil {
 		panic(err)
 	}
 	if len(vmPath) > 0 {
-		if err := Copy(vmPath, fmt.Sprintf("%s/%s", pluginsDir, constants.VMID)); err != nil {
+		if err := utils.CopyFile(vmPath, fmt.Sprintf("%s/%s", pluginsDir, constants.VMID)); err != nil {
 			panic(err)
 		}
 	}
 
-	nodeConfigs := make([]node.Config, numNodes)
-	nodeClients := make([]*info.Client, numNodes)
-	for i := 0; i < numNodes; i++ {
+	nodeConfigs := make([]node.Config, constants.NumNodes)
+	for i := 0; i < constants.NumNodes; i++ {
 		nodeDir := fmt.Sprintf("%s/node%d", dir, i+1)
-		if err := os.MkdirAll(nodeDir, os.FileMode(0777)); err != nil {
+		if err := os.MkdirAll(nodeDir, os.FileMode(constants.FilePerms)); err != nil {
 			panic(err)
 		}
 		certFile := fmt.Sprintf("%s/staker.crt", nodeDir)
-		if err := ioutil.WriteFile(certFile, nodeCerts[i], os.FileMode(0777)); err != nil {
+		if err := ioutil.WriteFile(certFile, nodeCerts[i], os.FileMode(constants.FilePerms)); err != nil {
 			panic(err)
 		}
 		keyFile := fmt.Sprintf("%s/staker.key", nodeDir)
-		if err := ioutil.WriteFile(keyFile, nodeKeys[i], os.FileMode(0777)); err != nil {
+		if err := ioutil.WriteFile(keyFile, nodeKeys[i], os.FileMode(constants.FilePerms)); err != nil {
 			panic(err)
 		}
 
@@ -166,8 +119,8 @@ func StartNetwork(ctx context.Context, configDir, vmPath string, bootstrapped ch
 		df.LogDir = fmt.Sprintf("%s/logs", nodeDir)
 		df.DBDir = fmt.Sprintf("%s/db", nodeDir)
 		df.StakingEnabled = true
-		df.HTTPPort = uint(baseHTTPPort + 2*i)
-		df.StakingPort = uint(baseHTTPPort + 2*i + 1)
+		df.HTTPPort = uint(constants.BaseHTTPPort + 2*i)
+		df.StakingPort = uint(constants.BaseHTTPPort + 2*i + 1)
 		if i != 0 {
 			df.BootstrapIPs = bootstrapIP
 			df.BootstrapIDs = bootstrapID
@@ -189,9 +142,9 @@ func StartNetwork(ctx context.Context, configDir, vmPath string, bootstrapped ch
 		}
 		nodeConfig.PluginDir = pluginsDir
 		nodeConfigs[i] = nodeConfig
-		nodeClients[i] = info.NewClient(fmt.Sprintf("http://127.0.0.1:%d", df.HTTPPort), httpTimeout)
 	}
 
+	// Start all nodes and check if bootstrapped
 	g, gctx := errgroup.WithContext(ctx)
 	for _, config := range nodeConfigs {
 		c := config
@@ -199,37 +152,43 @@ func StartNetwork(ctx context.Context, configDir, vmPath string, bootstrapped ch
 			return runApp(g, gctx, c)
 		})
 	}
+	g.Go(func() error {
+		return checkBootstrapped(gctx, bootstrapped)
+	})
+	return g.Wait()
+}
 
-	// Ensure bootstrapped
-	for i, client := range nodeClients {
-		for gctx.Err() == nil {
-			bootstrapped := true
-			for _, chain := range chains {
+func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
+	if bootstrapped == nil {
+		return nil
+	}
+
+	var (
+		nodeURLs = NodeURLs()
+		nodeIDs  = NodeIDs()
+	)
+
+	for i, url := range nodeURLs {
+		client := info.NewClient(url, constants.HTTPTimeout)
+		for {
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+			for _, chain := range constants.Chains {
 				chainBootstrapped, _ := client.IsBootstrapped(chain)
 				if !chainBootstrapped {
-					bootstrapped = false
-					break
+					time.Sleep(1 * time.Second)
+					continue
 				}
 			}
-			if bootstrapped {
-				color.Cyan("node %d is bootstrapped", i)
-				break
-			}
-			time.Sleep(1 * time.Second)
-		}
-		if gctx.Err() != nil {
+			color.Cyan("%d is bootstrapped", nodeIDs[i])
 			break
 		}
 	}
 
-	// If we reached this point and context is not errored,
-	// then the local network is bootstrapped.
-	if gctx.Err() == nil {
-		color.Cyan("all nodes bootstrapped")
-		close(bootstrapped)
-	}
-
-	return g.Wait()
+	color.Cyan("all nodes bootstrapped")
+	close(bootstrapped)
+	return nil
 }
 
 func runApp(g *errgroup.Group, ctx context.Context, config node.Config) error {
@@ -241,7 +200,7 @@ func runApp(g *errgroup.Group, ctx context.Context, config node.Config) error {
 		return nil
 	})
 
-	// start running the application
+	// Start running the AvalancheGo application
 	exitCode := app.Start()
 	return fmt.Errorf("unable to start: %d", exitCode)
 }

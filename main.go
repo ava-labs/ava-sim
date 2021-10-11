@@ -4,22 +4,15 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
 	"path"
 	"syscall"
-	"time"
 
-	"github.com/ava-labs/vm-tester/constants"
 	"github.com/ava-labs/vm-tester/manager"
+	"github.com/ava-labs/vm-tester/runner"
 	"golang.org/x/sync/errgroup"
-
-	"github.com/ava-labs/avalanchego/api"
-	"github.com/ava-labs/avalanchego/api/keystore"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/vms/platformvm"
 )
 
 func main() {
@@ -29,6 +22,7 @@ func main() {
 	rawVMGenesis := flag.String("vm-genesis", "", "location of custom VM genesis")
 	flag.Parse()
 	var configDir, vmPath, vmGenesis string
+	// TODO: use config path for custom VM only
 	if len(*rawConfigDir) > 1 {
 		configDir = path.Clean(*rawConfigDir)
 		if _, err := os.Stat(configDir); os.IsNotExist(err) {
@@ -80,149 +74,8 @@ func main() {
 	// only setup network if customVM exists
 	if len(vmPath) > 0 {
 		g.Go(func() error {
-			return setupNetwork(gctx, vmGenesis)
+			return runner.SetupSubnet(gctx, vmGenesis)
 		})
 	}
 	log.Fatal(g.Wait())
-}
-
-func setupNetwork(ctx context.Context, vmGenesis string) error {
-	// create user
-	userPass := api.UserPass{
-		Username: "test",
-		Password: "vmsrkewl",
-	}
-	kclient := keystore.NewClient("http://localhost:9650", 10*time.Second)
-	ok, err := kclient.CreateUser(userPass)
-	if err != nil {
-		panic(err)
-	}
-	if !ok {
-		panic("could not create user")
-	}
-
-	// connect to local network
-	client := platformvm.NewClient("http://localhost:9650", 10*time.Second)
-
-	// Import genesis key
-	fundedAddress, err := client.ImportKey(userPass, "PrivateKey-ewoqjP7PxY4yr3iLTpLisriqt94hdyDFNgchSxGGztUrTXtNN")
-	if err != nil {
-		panic(err)
-	}
-	balance, err := client.GetBalance(fundedAddress)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(fundedAddress, "Balance", balance)
-
-	// create a subnet
-	// TODO: migrate to not require pass on node
-	subnetIDTx, err := client.CreateSubnet(userPass, []string{fundedAddress}, fundedAddress, []string{fundedAddress}, 1)
-	if err != nil {
-		panic(err)
-	}
-
-	for {
-		if ctx.Err() != nil {
-			return ctx.Err()
-		}
-		status, _ := client.GetTxStatus(subnetIDTx, true)
-		if status.Status == platformvm.Committed {
-			break
-		}
-		fmt.Println("waiting for subnet creation tx to be accepted", subnetIDTx)
-		time.Sleep(1 * time.Second)
-	}
-
-	// get subnets (why don't we just get access?)
-	subnets, err := client.GetSubnets([]ids.ID{})
-	if err != nil {
-		panic(err)
-	}
-	rSubnetID := subnets[0].ID
-	subnetID := rSubnetID.String()
-
-	// Add all validators to subnet (equal weight)
-	for _, nodeID := range manager.NodeIDs() {
-		txID, err := client.AddSubnetValidator(
-			userPass,
-			[]string{fundedAddress}, fundedAddress,
-			subnetID, nodeID, 30,
-			uint64(time.Now().Add(1*time.Minute).Unix()),
-			uint64(time.Now().Add(30*24*time.Hour).Unix()),
-		)
-		if err != nil {
-			panic(err)
-		}
-
-		for {
-			if ctx.Err() != nil {
-				return ctx.Err()
-			}
-			status, _ := client.GetTxStatus(txID, true)
-			if status.Status == platformvm.Committed {
-				break
-			}
-			fmt.Println("waiting for add subnet validator tx to be accepted", txID)
-			time.Sleep(1 * time.Second)
-		}
-	}
-
-	// create blockchain
-	genesis, err := ioutil.ReadFile(vmGenesis)
-	if err != nil {
-		panic(err)
-	}
-	txID, err := client.CreateBlockchain(
-		userPass, []string{fundedAddress}, fundedAddress, rSubnetID,
-		constants.VMID, []string{}, constants.VMName, genesis,
-	)
-	if err != nil {
-		panic(err)
-	}
-	for {
-		if ctx.Err() != nil {
-			return ctx.Err()
-		}
-		status, _ := client.GetTxStatus(txID, true)
-		if status.Status == platformvm.Committed {
-			break
-		}
-		fmt.Println("waiting for create blockchain tx to be accepted", txID)
-		time.Sleep(1 * time.Second)
-	}
-
-	// validate blockchain exists
-	blockchains, err := client.GetBlockchains()
-	if err != nil {
-		panic(err)
-	}
-	var blockchainID ids.ID
-	for _, blockchain := range blockchains {
-		if blockchain.SubnetID == rSubnetID {
-			blockchainID = blockchain.ID
-			break
-		}
-	}
-	if blockchainID == (ids.ID{}) {
-		panic("could not find blockchain")
-	}
-	fmt.Println("blockchain created", blockchainID.String())
-
-	for {
-		if ctx.Err() != nil {
-			return ctx.Err()
-		}
-		// TODO: check validating for all nodes
-		status, _ := client.GetBlockchainStatus(blockchainID.String())
-		if status == platformvm.Validating {
-			break
-		}
-		fmt.Println("waiting for validating status")
-		time.Sleep(15 * time.Second)
-	}
-	fmt.Println("validating blockchain", blockchainID)
-
-	// TODO: ensure network bootstrapped
-	return nil
 }

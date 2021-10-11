@@ -6,6 +6,10 @@
 `ava-sim` makes it easy for anyone to spin up a local Avalanche network to use
 standard APIs or to test a custom VM.
 
+### Prerequisites
+You must have [Golang](https://golang.org/doc/install) >= 1.16 and a configured
+[$GOPATH](https://github.com/golang/go/wiki/SettingGOPATH).
+
 ## Standard Network
 `./scripts/run.sh`
 
@@ -48,6 +52,19 @@ NodeID-MFrZFVCXPv5iCn6M9K6XduxGTYp891xXZ: http://127.0.0.1:9652/ext/bc/28TtJ7sdY
 NodeID-NFBbbJ4qCmNaCzeW7sxErhvWqvEQMnYcN: http://127.0.0.1:9654/ext/bc/28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
 NodeID-GWPcbFJZFfZreETSoWjPimr846mXEKCtu: http://127.0.0.1:9656/ext/bc/28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
 NodeID-P7oB2McjBGgW2NXXWVYjV8JEDFoW9xDE5: http://127.0.0.1:9658/ext/bc/28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
+```
+
+https://docs.avax.network/build/tutorials/platform/create-custom-blockchain#interact-with-the-new-blockchain
+
+```txt
+curl -X POST --data '{
+    "jsonrpc": "2.0",
+    "method": "timestampvm.getBlock",
+    "params":{
+        "id":""
+    },
+    "id": 1
+}' -H 'content-type:application/json;' 127.0.0.1:9650/ext/bc/28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
 ```
 
 ## What this is NOT

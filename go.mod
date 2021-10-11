@@ -1,4 +1,4 @@
-module github.com/ava-labs/vm-tester
+module github.com/ava-labs/ava-sim
 
 go 1.16
 

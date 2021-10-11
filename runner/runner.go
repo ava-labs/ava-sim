@@ -7,8 +7,8 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/ava-labs/vm-tester/constants"
-	"github.com/ava-labs/vm-tester/manager"
+	"github.com/ava-labs/ava-sim/constants"
+	"github.com/ava-labs/ava-sim/manager"
 
 	"github.com/ava-labs/avalanchego/api"
 	"github.com/ava-labs/avalanchego/api/info"

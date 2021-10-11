@@ -62,14 +62,16 @@ func main() {
 		return manager.StartNetwork(gctx, vm, bootstrapped)
 	})
 
-	<-bootstrapped
-
 	// Only setup network if a custom VM is provided and the network has finished
 	// bootstrapping
-	if len(vm) > 0 {
-		g.Go(func() error {
-			return runner.SetupSubnet(gctx, vmGenesis)
-		})
+	select {
+	case <-bootstrapped:
+		if len(vm) > 0 {
+			g.Go(func() error {
+				return runner.SetupSubnet(gctx, vmGenesis)
+			})
+		}
+	case <-ctx.Done():
 	}
 
 	color.Red("ava-sim exited with error: %s", g.Wait())

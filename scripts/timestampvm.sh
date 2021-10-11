@@ -6,12 +6,12 @@ curr="${PWD}"
 
 # Download timestampvm
 timestampvm_version='v1.1.0'
-timestampvm_path="${PWD}/timestampvm-plugin/timestampvm"
-timestamp_genesis_path="${PWD}/timestampvm-plugin/genesis.txt"
+timestampvm_path="${PWD}/timestampvm/timestampvm"
+timestamp_genesis_path="${PWD}/timestampvm/genesis.txt"
 
-if [ ! -d "timestampvm-plugin" ]
+if [ ! -d "timestampvm" ]
 then
-  mkdir timestampvm-plugin
+  mkdir timestampvm
 
   # Create genesis
   touch $timestamp_genesis_path

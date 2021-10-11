@@ -75,7 +75,7 @@ func NodeURLs() []string {
 	return urls
 }
 
-func StartNetwork(ctx context.Context, configDir, vmPath string, bootstrapped chan struct{}) error {
+func StartNetwork(ctx context.Context, vmPath string, bootstrapped chan struct{}) error {
 	dir, err := ioutil.TempDir("", "vm-tester")
 	if err != nil {
 		panic(err)
@@ -127,9 +127,6 @@ func StartNetwork(ctx context.Context, configDir, vmPath string, bootstrapped ch
 		} else {
 			df.BootstrapIPs = ""
 			df.BootstrapIDs = ""
-		}
-		if len(configDir) > 0 {
-			df.ChainConfigDir = configDir
 		}
 		if len(vmPath) > 0 {
 			df.WhitelistedSubnets = constants.WhitelistedSubnets

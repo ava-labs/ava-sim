@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"path"
@@ -12,34 +10,25 @@ import (
 
 	"github.com/ava-labs/vm-tester/manager"
 	"github.com/ava-labs/vm-tester/runner"
+	"github.com/fatih/color"
 	"golang.org/x/sync/errgroup"
 )
 
 func main() {
-	// Parse Args
-	rawConfigDir := flag.String("config-dir", "", "directory for all VM configs")
-	rawVMPath := flag.String("vm-path", "", "location of custom VM binary")
-	rawVMGenesis := flag.String("vm-genesis", "", "location of custom VM genesis")
-	flag.Parse()
-	var configDir, vmPath, vmGenesis string
-	// TODO: use config path for custom VM only
-	if len(*rawConfigDir) > 1 {
-		configDir = path.Clean(*rawConfigDir)
-		if _, err := os.Stat(configDir); os.IsNotExist(err) {
-			panic(fmt.Sprintf("%s does not exist", configDir))
-		}
-	}
-	if len(*rawVMPath) > 1 {
-		vmPath = path.Clean(*rawVMPath)
+	var vmPath, vmGenesis string
+	switch len(os.Args) {
+	case 1: // normal network
+	case 3:
+		vmPath = path.Clean(os.Args[1])
 		if _, err := os.Stat(vmPath); os.IsNotExist(err) {
 			panic(fmt.Sprintf("%s does not exist", vmPath))
 		}
-	}
-	if len(*rawVMGenesis) > 1 {
-		vmGenesis = path.Clean(*rawVMGenesis)
-		if _, err := os.Stat(vmGenesis); os.IsNotExist(err) {
+		vmGenesis = path.Clean(os.Args[2])
+		if _, err := os.Stat(vmPath); os.IsNotExist(err) {
 			panic(fmt.Sprintf("%s does not exist", vmGenesis))
 		}
+	default:
+		panic("invalid arguments (expecting no arguments or [vm-path] [vm-genesis])")
 	}
 
 	// Start local network
@@ -67,15 +56,18 @@ func main() {
 	})
 
 	g.Go(func() error {
-		return manager.StartNetwork(gctx, configDir, vmPath, bootstrapped)
+		return manager.StartNetwork(gctx, vmPath, bootstrapped)
 	})
-	<-bootstrapped
 
-	// only setup network if customVM exists
+	// Only setup network if a custom VM is provided and the network has finished
+	// bootstrapping
+	<-bootstrapped
 	if len(vmPath) > 0 {
 		g.Go(func() error {
 			return runner.SetupSubnet(gctx, vmGenesis)
 		})
 	}
-	log.Fatal(g.Wait())
+
+	color.Red("ava-sim exited with error: %s", g.Wait())
+	os.Exit(1)
 }

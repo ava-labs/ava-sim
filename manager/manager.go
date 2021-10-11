@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/ava-labs/vm-tester/constants"
-	"github.com/ava-labs/vm-tester/utils"
+	"github.com/ava-labs/ava-sim/constants"
+	"github.com/ava-labs/ava-sim/utils"
 
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/app/process"
@@ -76,7 +76,7 @@ func NodeURLs() []string {
 }
 
 func StartNetwork(ctx context.Context, vmPath string, bootstrapped chan struct{}) error {
-	dir, err := ioutil.TempDir("", "vm-tester")
+	dir, err := ioutil.TempDir("", "ava-sim")
 	if err != nil {
 		panic(err)
 	}

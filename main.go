@@ -8,8 +8,8 @@ import (
 	"path"
 	"syscall"
 
-	"github.com/ava-labs/vm-tester/manager"
-	"github.com/ava-labs/vm-tester/runner"
+	"github.com/ava-labs/ava-sim/manager"
+	"github.com/ava-labs/ava-sim/runner"
 	"github.com/fatih/color"
 	"golang.org/x/sync/errgroup"
 )

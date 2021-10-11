@@ -74,3 +74,7 @@ VMs.
 
 [avash](https://github.com/ava-labs/avash) provides similar functionality
 to `ava-sim` but requires ...
+
+## TODO
+- [ ] Cleanup node initialization (should be able to init directly instead of needing to convert from flags to
+  config)

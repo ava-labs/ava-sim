@@ -8,7 +8,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/ava-labs/vm-tester/constants"
+	"github.com/ava-labs/ava-sim/constants"
 
 	"github.com/ava-labs/avalanchego/ids"
 	avalancheContants "github.com/ava-labs/avalanchego/utils/constants"

@@ -10,13 +10,16 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"time"
 
 	"github.com/ava-labs/avalanchego/ids"
 	aConstants "github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/hashing"
+	"github.com/fatih/color"
 
 	"github.com/ava-labs/vm-tester/constants"
 
+	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/app/process"
 	"github.com/ava-labs/avalanchego/node"
 	"golang.org/x/sync/errgroup"
@@ -27,6 +30,11 @@ const (
 	bootstrapIP  = "127.0.0.1:9651"
 	numNodes     = 5
 	baseHTTPPort = 9650
+	httpTimeout  = 10 * time.Second
+)
+
+var (
+	chains = []string{"P", "C", "X"}
 )
 
 // Embed certs in binary and write to tmp file on startup (full binary)
@@ -113,7 +121,7 @@ func NodeIDs() []string {
 	return nodeIDs
 }
 
-func StartNetwork(ctx context.Context, configDir, vmPath string) error {
+func StartNetwork(ctx context.Context, configDir, vmPath string, bootstrapped chan struct{}) error {
 	dir, err := ioutil.TempDir("", "vm-tester")
 	if err != nil {
 		panic(err)
@@ -138,6 +146,7 @@ func StartNetwork(ctx context.Context, configDir, vmPath string) error {
 	}
 
 	nodeConfigs := make([]node.Config, numNodes)
+	nodeClients := make([]*info.Client, numNodes)
 	for i := 0; i < numNodes; i++ {
 		nodeDir := fmt.Sprintf("%s/node%d", dir, i+1)
 		if err := os.MkdirAll(nodeDir, os.FileMode(0777)); err != nil {
@@ -180,6 +189,7 @@ func StartNetwork(ctx context.Context, configDir, vmPath string) error {
 		}
 		nodeConfig.PluginDir = pluginsDir
 		nodeConfigs[i] = nodeConfig
+		nodeClients[i] = info.NewClient(fmt.Sprintf("http://127.0.0.1:%d", df.HTTPPort), httpTimeout)
 	}
 
 	g, gctx := errgroup.WithContext(ctx)
@@ -188,6 +198,35 @@ func StartNetwork(ctx context.Context, configDir, vmPath string) error {
 		g.Go(func() error {
 			return runApp(g, gctx, c)
 		})
+	}
+
+	// Ensure bootstrapped
+	for i, client := range nodeClients {
+		for gctx.Err() == nil {
+			bootstrapped := true
+			for _, chain := range chains {
+				chainBootstrapped, _ := client.IsBootstrapped(chain)
+				if !chainBootstrapped {
+					bootstrapped = false
+					break
+				}
+			}
+			if bootstrapped {
+				color.Cyan("node %d is bootstrapped", i)
+				break
+			}
+			time.Sleep(1 * time.Second)
+		}
+		if gctx.Err() != nil {
+			break
+		}
+	}
+
+	// If we reached this point and context is not errored,
+	// then the local network is bootstrapped.
+	if gctx.Err() == nil {
+		color.Cyan("all nodes bootstrapped")
+		close(bootstrapped)
 	}
 
 	return g.Wait()

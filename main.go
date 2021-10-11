@@ -17,7 +17,6 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/ava-labs/avalanchego/api"
-	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/api/keystore"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/platformvm"
@@ -50,18 +49,10 @@ func main() {
 	}
 
 	// Start local network
+	bootstrapped := make(chan struct{})
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	g, gctx := errgroup.WithContext(ctx)
-	g.Go(func() error {
-		return manager.StartNetwork(gctx, configDir, vmPath)
-	})
-	// only setup network if customVM exists
-	if len(vmPath) > 0 {
-		g.Go(func() error {
-			return setupNetwork(gctx, vmGenesis)
-		})
-	}
 	g.Go(func() error {
 		// register signals to kill the application
 		signals := make(chan os.Signal, 1)
@@ -80,26 +71,22 @@ func main() {
 		}
 		return nil
 	})
+
+	g.Go(func() error {
+		return manager.StartNetwork(gctx, configDir, vmPath, bootstrapped)
+	})
+	<-bootstrapped
+
+	// only setup network if customVM exists
+	if len(vmPath) > 0 {
+		g.Go(func() error {
+			return setupNetwork(gctx, vmGenesis)
+		})
+	}
 	log.Fatal(g.Wait())
 }
 
 func setupNetwork(ctx context.Context, vmGenesis string) error {
-	// wait for network to be bootstrapped
-	// TODO: wait for all URLS to be good
-	iClient := info.NewClient("http://localhost:9650", 10*time.Second)
-	for {
-		if ctx.Err() != nil {
-			return ctx.Err()
-		}
-		bootstrapped, _ := iClient.IsBootstrapped("P")
-		if bootstrapped {
-			break
-		}
-
-		fmt.Println("waiting for P-Chain to be bootstrapped")
-		time.Sleep(1 * time.Second)
-	}
-
 	// create user
 	userPass := api.UserPass{
 		Username: "test",
@@ -226,6 +213,7 @@ func setupNetwork(ctx context.Context, vmGenesis string) error {
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
+		// TODO: check validating for all nodes
 		status, _ := client.GetBlockchainStatus(blockchainID.String())
 		if status == platformvm.Validating {
 			break
@@ -234,5 +222,7 @@ func setupNetwork(ctx context.Context, vmGenesis string) error {
 		time.Sleep(15 * time.Second)
 	}
 	fmt.Println("validating blockchain", blockchainID)
+
+	// TODO: ensure network bootstrapped
 	return nil
 }

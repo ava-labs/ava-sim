@@ -20,25 +20,11 @@ then
   go mod tidy
 fi
 
-# Config Dir, VM Location, Genesis Location
-config_dir=''
-vm_path=''
-vm_genesis=''
-for flag in "$@"; do
-  case "${flag}" in
-          --config-dir=*)
-            config_dir="${flag#*=}"
-                  ;;
-          --vm-path=*)
-            vm_path="${flag#*=}"
-            shift
-                   ;;
-          --vm-genesis=*)
-            vm_genesis="${flag#*=}"
-            shift
-                   ;;
-          *) echo "Invalid option: -$flag" ;;
-  esac
-done
-
-go run main.go "--config-dir=${config_dir}" "--vm-path=${vm_path}" "--vm-genesis=${vm_genesis}"
+if [ $# -eq 0 ]; then
+  go run main.go
+elif [ $# -eq 2 ]; then
+  go run main.go $1 $2
+else
+  echo 'invalid number of arguments (expected no args or [vm-path] [vm-genesis]'
+  exit 1
+fi

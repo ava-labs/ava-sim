@@ -171,20 +171,38 @@ func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
 			if ctx.Err() != nil {
 				return ctx.Err()
 			}
+			bootstrapped := true
 			for _, chain := range constants.Chains {
 				chainBootstrapped, _ := client.IsBootstrapped(chain)
 				if !chainBootstrapped {
+					color.Yellow("waiting for %s to bootstrap %s-chain", nodeIDs[i], chain)
+					bootstrapped = false
 					time.Sleep(1 * time.Second)
-					continue
+					break
 				}
 			}
-			color.Cyan("%d is bootstrapped", nodeIDs[i])
+			if !bootstrapped {
+				continue
+			}
+			if peers, _ := client.Peers(); len(peers) < constants.NumNodes-1 {
+				color.Yellow("waiting for %s to connect to all peers (%d/4)", nodeIDs[i], len(peers))
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			color.Cyan("%s is bootstrapped", nodeIDs[i])
 			break
 		}
 	}
 
 	color.Cyan("all nodes bootstrapped")
 	close(bootstrapped)
+
+	// Print endpoints where VM is accessible
+	color.Green("standard VM endpoints now accessible at:")
+	for i, url := range nodeURLs {
+		color.Green("%s: %s", nodeIDs[i], url)
+	}
+
 	return nil
 }
 

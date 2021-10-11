@@ -198,9 +198,9 @@ func SetupSubnet(ctx context.Context, vmGenesis string) error {
 	}
 
 	// Print endpoints where VM is accessible
-	color.Cyan("VM endpoints now accessible at:")
+	color.Green("Custom VM endpoints now accessible at:")
 	for i, url := range nodeURLs {
-		color.Cyan("%s: %s/ext/bc/%s", nodeIDs[i], url, blockchainID.String())
+		color.Green("%s: %s/ext/bc/%s", nodeIDs[i], url, blockchainID.String())
 	}
 	return nil
 }

@@ -59,9 +59,10 @@ func main() {
 		return manager.StartNetwork(gctx, vmPath, bootstrapped)
 	})
 
+	<-bootstrapped
+
 	// Only setup network if a custom VM is provided and the network has finished
 	// bootstrapping
-	<-bootstrapped
 	if len(vmPath) > 0 {
 		g.Go(func() error {
 			return runner.SetupSubnet(gctx, vmGenesis)

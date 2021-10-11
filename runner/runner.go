@@ -19,8 +19,9 @@ import (
 )
 
 const (
-	genesisKey = "PrivateKey-ewoqjP7PxY4yr3iLTpLisriqt94hdyDFNgchSxGGztUrTXtNN"
-	waitTime   = 1 * time.Second
+	genesisKey   = "PrivateKey-ewoqjP7PxY4yr3iLTpLisriqt94hdyDFNgchSxGGztUrTXtNN"
+	waitTime     = 1 * time.Second
+	longWaitTime = 10 * waitTime
 
 	validatorWeight    = 50
 	validatorStartDiff = 30 * time.Second
@@ -175,7 +176,7 @@ func SetupSubnet(ctx context.Context, vmGenesis string) error {
 				break
 			}
 			color.Yellow("waiting for validating status for %s", nodeIDs[i])
-			time.Sleep(waitTime)
+			time.Sleep(longWaitTime)
 		}
 		color.Cyan("%s validating blockchain %s", nodeIDs[i], blockchainID)
 	}

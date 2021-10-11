@@ -21,6 +21,7 @@ import (
 const (
 	bootstrapID = "NodeID-7Xhw2mDxuDS44j42TCB6U5579esbSt3Lg"
 	bootstrapIP = "127.0.0.1:9651"
+	waitDiff    = 10 * time.Second
 )
 
 // Embed certs in binary and write to tmp file on startup (full binary)
@@ -177,7 +178,7 @@ func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
 				if !chainBootstrapped {
 					color.Yellow("waiting for %s to bootstrap %s-chain", nodeIDs[i], chain)
 					bootstrapped = false
-					time.Sleep(1 * time.Second)
+					time.Sleep(waitDiff)
 					break
 				}
 			}
@@ -186,7 +187,7 @@ func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
 			}
 			if peers, _ := client.Peers(); len(peers) < constants.NumNodes-1 {
 				color.Yellow("waiting for %s to connect to all peers (%d/4)", nodeIDs[i], len(peers))
-				time.Sleep(1 * time.Second)
+				time.Sleep(waitDiff)
 				continue
 			}
 			color.Cyan("%s is bootstrapped", nodeIDs[i])

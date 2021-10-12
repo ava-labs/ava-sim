@@ -144,10 +144,11 @@ func StartNetwork(ctx context.Context, vmPath string, bootstrapped chan struct{}
 
 	// Start all nodes and check if bootstrapped
 	g, gctx := errgroup.WithContext(ctx)
-	for _, config := range nodeConfigs {
+	for i, config := range nodeConfigs {
 		c := config
+		j := i
 		g.Go(func() error {
-			return runApp(g, gctx, c)
+			return runApp(g, gctx, j, c)
 		})
 	}
 	g.Go(func() error {
@@ -207,7 +208,7 @@ func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
 	return nil
 }
 
-func runApp(g *errgroup.Group, ctx context.Context, config node.Config) error {
+func runApp(g *errgroup.Group, ctx context.Context, nodeNum int, config node.Config) error {
 	app := process.NewApp(config)
 
 	g.Go(func() error {
@@ -218,5 +219,5 @@ func runApp(g *errgroup.Group, ctx context.Context, config node.Config) error {
 
 	// Start running the AvalancheGo application
 	exitCode := app.Start()
-	return fmt.Errorf("unable to start: %d", exitCode)
+	return fmt.Errorf("node%d: exited with code %d", nodeNum+1, exitCode)
 }

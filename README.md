@@ -36,7 +36,7 @@ own VM
 [here](https://docs.avax.network/build/tutorials/platform/create-a-virtual-machine-vm).
 
 ### Example: [TimestampVM](https://github.com/ava-labs/timestampvm)
-For those that have yet to create their own VM, you can run `./scripts/subnet-example.sh` to start your own network + subnet running the `TimestampVM`. After initial network startup,
+For those that have yet to create their own VM, you can run `./scripts/timestampvm.sh` to start your own network + subnet running the `TimestampVM`. After initial network startup,
 you'll see the following logs when all validators in the network are validating
 your custom blockchain (the actual blockchain ID may be slightly different):
 ```txt

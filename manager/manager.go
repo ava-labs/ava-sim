@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	_ "embed"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -171,6 +172,7 @@ func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
 		client := info.NewClient(url, constants.HTTPTimeout)
 		for {
 			if ctx.Err() != nil {
+				color.Red("stopping bootstrapped check: %v", ctx.Err())
 				return ctx.Err()
 			}
 			bootstrapped := true
@@ -219,5 +221,7 @@ func runApp(g *errgroup.Group, ctx context.Context, nodeNum int, config node.Con
 
 	// Start running the AvalancheGo application
 	exitCode := app.Start()
-	return fmt.Errorf("node%d: exited with code %d", nodeNum+1, exitCode)
+	exitMessage := fmt.Sprintf("node%d: exited with code %v", nodeNum+1, exitCode)
+	color.Red(exitMessage)
+	return errors.New(exitMessage)
 }

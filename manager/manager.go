@@ -3,7 +3,6 @@ package manager
 import (
 	"context"
 	_ "embed"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -213,15 +212,17 @@ func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
 func runApp(g *errgroup.Group, ctx context.Context, nodeNum int, config node.Config) error {
 	app := process.NewApp(config)
 
+	// Start running the AvalancheGo application
+	if err := app.Start(); err != nil {
+		return fmt.Errorf("node%d failed to start: %w", nodeNum+1, err)
+	}
+
 	g.Go(func() error {
 		<-ctx.Done()
 		app.Stop()
-		return nil
+		return ctx.Err()
 	})
 
-	// Start running the AvalancheGo application
-	exitCode := app.Start()
-	exitMessage := fmt.Sprintf("node%d: exited with code %v", nodeNum+1, exitCode)
-	color.Red(exitMessage)
-	return errors.New(exitMessage)
+	_, err := app.ExitCode()
+	return err
 }

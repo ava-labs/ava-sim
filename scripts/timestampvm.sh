@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-sh ./scripts/prepare-system-plugins.sh
+./scripts/prepare-system-plugins.sh
 
 curr="${PWD}"
 

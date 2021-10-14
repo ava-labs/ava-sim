@@ -180,19 +180,19 @@ func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
 				if !chainBootstrapped {
 					color.Yellow("waiting for %s to bootstrap %s-chain", nodeIDs[i], chain)
 					bootstrapped = false
-					time.Sleep(waitDiff)
 					break
 				}
 			}
 			if !bootstrapped {
-				continue
-			}
-			if peers, _ := client.Peers(); len(peers) < constants.NumNodes-1 {
-				color.Yellow("waiting for %s to connect to all peers (%d/4)", nodeIDs[i], len(peers))
 				time.Sleep(waitDiff)
 				continue
 			}
-			color.Cyan("%s is bootstrapped", nodeIDs[i])
+			if peers, _ := client.Peers(); len(peers) < constants.NumNodes-1 {
+				color.Yellow("waiting for %s to connect to all peers (%d/%d)", nodeIDs[i], len(peers), constants.NumNodes-1)
+				time.Sleep(waitDiff)
+				continue
+			}
+			color.Cyan("%s is bootstrapped and connected", nodeIDs[i])
 			break
 		}
 	}
@@ -219,10 +219,13 @@ func runApp(g *errgroup.Group, ctx context.Context, nodeNum int, config node.Con
 
 	g.Go(func() error {
 		<-ctx.Done()
-		app.Stop()
+		_ = app.Stop()
 		return ctx.Err()
 	})
 
-	_, err := app.ExitCode()
+	exitCode, err := app.ExitCode()
+	if (exitCode > 0 || err != nil) && ctx.Err() == nil {
+		color.Red("node%d exited with code %d: %v", nodeNum+1, exitCode, err)
+	}
 	return err
 }

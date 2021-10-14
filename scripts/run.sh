@@ -1,6 +1,6 @@
 #!/bin/sh
 
-sh ./scripts/prepare-system-plugins.sh
+./scripts/prepare-system-plugins.sh
 
 if [ $# -eq 0 ]; then
   go run main.go

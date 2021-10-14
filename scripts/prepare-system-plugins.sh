@@ -7,7 +7,7 @@ set -o pipefail
 curr="${PWD}"
 
 # Download coreth
-coreth_version='v0.7.0-rc.14'
+coreth_version='v0.7.1-rc.2'
 evm_path="${PWD}/system-plugins/evm"
 
 if [ ! -d "system-plugins" ]

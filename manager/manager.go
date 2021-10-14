@@ -144,10 +144,11 @@ func StartNetwork(ctx context.Context, vmPath string, bootstrapped chan struct{}
 
 	// Start all nodes and check if bootstrapped
 	g, gctx := errgroup.WithContext(ctx)
-	for _, config := range nodeConfigs {
+	for i, config := range nodeConfigs {
 		c := config
+		j := i
 		g.Go(func() error {
-			return runApp(g, gctx, c)
+			return runApp(g, gctx, j, c)
 		})
 	}
 	g.Go(func() error {
@@ -170,6 +171,7 @@ func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
 		client := info.NewClient(url, constants.HTTPTimeout)
 		for {
 			if ctx.Err() != nil {
+				color.Red("stopping bootstrapped check: %v", ctx.Err())
 				return ctx.Err()
 			}
 			bootstrapped := true
@@ -178,19 +180,19 @@ func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
 				if !chainBootstrapped {
 					color.Yellow("waiting for %s to bootstrap %s-chain", nodeIDs[i], chain)
 					bootstrapped = false
-					time.Sleep(waitDiff)
 					break
 				}
 			}
 			if !bootstrapped {
-				continue
-			}
-			if peers, _ := client.Peers(); len(peers) < constants.NumNodes-1 {
-				color.Yellow("waiting for %s to connect to all peers (%d/4)", nodeIDs[i], len(peers))
 				time.Sleep(waitDiff)
 				continue
 			}
-			color.Cyan("%s is bootstrapped", nodeIDs[i])
+			if peers, _ := client.Peers(); len(peers) < constants.NumNodes-1 {
+				color.Yellow("waiting for %s to connect to all peers (%d/%d)", nodeIDs[i], len(peers), constants.NumNodes-1)
+				time.Sleep(waitDiff)
+				continue
+			}
+			color.Cyan("%s is bootstrapped and connected", nodeIDs[i])
 			break
 		}
 	}
@@ -207,16 +209,23 @@ func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
 	return nil
 }
 
-func runApp(g *errgroup.Group, ctx context.Context, config node.Config) error {
+func runApp(g *errgroup.Group, ctx context.Context, nodeNum int, config node.Config) error {
 	app := process.NewApp(config)
+
+	// Start running the AvalancheGo application
+	if err := app.Start(); err != nil {
+		return fmt.Errorf("node%d failed to start: %w", nodeNum+1, err)
+	}
 
 	g.Go(func() error {
 		<-ctx.Done()
-		app.Stop()
-		return nil
+		_ = app.Stop()
+		return ctx.Err()
 	})
 
-	// Start running the AvalancheGo application
-	exitCode := app.Start()
-	return fmt.Errorf("unable to start: %d", exitCode)
+	exitCode, err := app.ExitCode()
+	if (exitCode > 0 || err != nil) && ctx.Err() == nil {
+		color.Red("node%d exited with code %d: %v", nodeNum+1, exitCode, err)
+	}
+	return err
 }

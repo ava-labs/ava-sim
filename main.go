@@ -51,7 +51,8 @@ func main() {
 		}()
 
 		select {
-		case <-signals:
+		case sig := <-signals:
+			color.Red("signal received: %v", sig)
 			cancel()
 		case <-gctx.Done():
 		}
@@ -66,12 +67,12 @@ func main() {
 	// bootstrapping
 	select {
 	case <-bootstrapped:
-		if len(vm) > 0 {
+		if len(vm) > 0 && gctx.Err() == nil {
 			g.Go(func() error {
 				return runner.SetupSubnet(gctx, vmGenesis)
 			})
 		}
-	case <-ctx.Done():
+	case <-gctx.Done():
 	}
 
 	color.Red("ava-sim exited with error: %s", g.Wait())

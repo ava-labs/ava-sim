@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ./scripts/prepare-system-plugins.sh
 

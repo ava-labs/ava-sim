@@ -3,7 +3,6 @@ build_dir="${MAIN_PATH}/build"
 
 timestampvm_version='v1.1.1'
 timestampvm_path="${build_dir}/timestampvm/timestampvm"
-timestamp_genesis_path="${build_dir}/timestampvm/genesis.txt"
 
 coreth_version='v0.7.2'
 evm_path="${build_dir}/system-plugins/evm"

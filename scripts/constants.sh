@@ -1,7 +1,7 @@
 #!/bin/bash
 build_dir="${MAIN_PATH}/build"
 
-timestampvm_version='v1.1.1'
+timestampvm_version='v1.1.2'
 timestampvm_path="${build_dir}/timestampvm/timestampvm"
 
 coreth_version='v0.7.4'

@@ -81,8 +81,6 @@ type Flags struct {
 	SnowQuorumSize              int
 	SnowVirtuousCommitThreshold int
 	SnowRogueCommitThreshold    int
-	SnowEpochFirstTransition    int
-	SnowEpochDuration           string
 	SnowConcurrentRepolls       int
 	MinDelegatorStake           int
 	ConsensusShutdownTimeout    string
@@ -193,8 +191,6 @@ func defaultFlags() Flags {
 		SnowQuorumSize:                          2,
 		SnowVirtuousCommitThreshold:             5,
 		SnowRogueCommitThreshold:                10,
-		SnowEpochFirstTransition:                1609873200,
-		SnowEpochDuration:                       "6h",
 		SnowConcurrentRepolls:                   4,
 		MinDelegatorStake:                       5000000,
 		ConsensusShutdownTimeout:                "5s",
@@ -310,8 +306,6 @@ func flagsToArgs(flags Flags) []string {
 		"--snow-quorum-size=" + strconv.Itoa(flags.SnowQuorumSize),
 		"--snow-virtuous-commit-threshold=" + strconv.Itoa(flags.SnowVirtuousCommitThreshold),
 		"--snow-rogue-commit-threshold=" + strconv.Itoa(flags.SnowRogueCommitThreshold),
-		"--snow-epoch-first-transition=" + strconv.Itoa(flags.SnowEpochFirstTransition),
-		"--snow-epoch-duration=" + flags.SnowEpochDuration,
 		"--min-delegator-stake=" + strconv.Itoa(flags.MinDelegatorStake),
 		"--consensus-shutdown-timeout=" + flags.ConsensusShutdownTimeout,
 		"--consensus-gossip-frequency=" + flags.ConsensusGossipFrequency,

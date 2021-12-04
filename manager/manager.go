@@ -91,7 +91,7 @@ func StartNetwork(ctx context.Context, vmPath string, bootstrapped chan struct{}
 	if err := os.MkdirAll(pluginsDir, os.FileMode(constants.FilePerms)); err != nil {
 		panic(err)
 	}
-	if err := utils.CopyFile("system-plugins/evm", fmt.Sprintf("%s/evm", pluginsDir)); err != nil {
+	if err := utils.CopyFile("build/system-plugins/evm", fmt.Sprintf("%s/evm", pluginsDir)); err != nil {
 		panic(err)
 	}
 	if len(vmPath) > 0 {

@@ -8,9 +8,13 @@ to interact with the [standard APIs](https://docs.avax.network/build/avalanchego
 or to test a [custom
 VM](https://docs.avax.network/build/tutorials/platform/create-custom-blockchain).
 
-### Prerequisites
+## Prerequisites
 You must have [Golang](https://golang.org/doc/install) >= `1.16` and a configured
 [`$GOPATH`](https://github.com/golang/go/wiki/SettingGOPATH).
+
+## Build
+
+In order to build dependencies run `./scripts/build.sh`.
 
 ## Standard Network
 To spin up a standard 5 node network, just run `./scripts/run.sh`. When the

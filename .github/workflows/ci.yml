@@ -20,6 +20,7 @@ jobs:
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
+          path: ./main
           distribution: goreleaser
           version: latest
           args: release --rm-dist

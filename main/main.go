@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"path"
@@ -69,7 +70,17 @@ func main() {
 	case <-bootstrapped:
 		if len(vm) > 0 && gctx.Err() == nil {
 			g.Go(func() error {
-				return runner.SetupSubnet(gctx, vmGenesis)
+				blockchainID, err := runner.SetupSubnet(gctx, vmGenesis)
+				if err != nil {
+					return err
+				}
+
+				// useful for e2e test integration to create RPC endpoint
+				// TODO: make this file path configurable
+				if err := ioutil.WriteFile("blockchain.id", []byte(blockchainID), 0666); err != nil {
+					return fmt.Errorf("failed to write blockchain.id, %v", err)
+				}
+				return nil
 			})
 		}
 	case <-gctx.Done():

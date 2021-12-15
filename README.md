@@ -95,7 +95,7 @@ Once you've added your network and imported the address with all the funds, you
 can send a transaction like you normally would in MetaMask. Have fun!
 
 ### Example: [TimestampVM](https://github.com/ava-labs/timestampvm)
-For those that have yet to create their own VM, you can run `./scripts/timestampvm.sh` to start your own network + subnet running the `TimestampVM`. After initial network startup,
+But wait, there's more! You can also run `./scripts/timestampvm.sh` to start your own network + subnet running the `TimestampVM`. After initial network startup (just like with the `Subnet-EVM`),
 you'll see the following logs when all validators in the network are validating
 your custom blockchain (the actual blockchain ID may be slightly different):
 ```txt
@@ -137,7 +137,3 @@ Avalanche.
 
 If you are looking for a more powerful framework, check out [avash](https://github.com/ava-labs/avash). This tool lets
 you run multiple versions of the same binary and provide custom node configs.
-
-## TODOs
-- [ ] Cleanup node initialization (should be able to init directly instead of needing to convert from flags to
-  config)

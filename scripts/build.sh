@@ -16,6 +16,14 @@ cd "$coreth_path"
 go build -ldflags "-X github.com/ava-labs/coreth/plugin/evm.Version=$coreth_version" -o "$evm_path" "plugin/"*.go
 cd "$MAIN_PATH"
 
+# Build subnet-evm
+echo "Building Subnet-EVM @ ${subnetevm_version} ..."
+go get "github.com/ava-labs/subnet-evm@$subnetevm_version";
+svm_path="$GOPATH/pkg/mod/github.com/ava-labs/subnet-evm@$subnetevm_version"
+cd "$svm_path"
+go build -ldflags "-X github.com/ava-labs/subnet-evm/plugin/evm.Version=$subnetevm_version" -o "$subnetevm_path" "plugin/"*.go
+cd "$MAIN_PATH"
+
 # Build timestampvm
 echo "Building Timestampvm @ ${timestampvm_version} ..."
 go get "github.com/ava-labs/timestampvm@$timestampvm_version";
@@ -27,13 +35,11 @@ cd "$MAIN_PATH"
 # Building coreth + using go get can mess with the go.mod file.
 go mod tidy
 
-
 # Exit build successfully if the binaries are created
-if [[ -f "$timestampvm_path" && -f "$evm_path" ]]; then
+if [[ -f "$evm_path" && -f "$subnetevm_path" && -f "$timestampvm_path" ]]; then
         echo "Build Successful"
         exit 0
 else
         echo "Build failure" >&2
         exit 1
 fi
-

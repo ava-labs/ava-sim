@@ -1,7 +1,7 @@
 #!/bin/bash
 build_dir="${MAIN_PATH}/build"
 
-subnetevm_version='v0.0.2'
+subnetevm_version='v0.1.0'
 subnetevm_path="${build_dir}/subnet-evm/subnet-evm"
 
 timestampvm_version='v1.2.0'

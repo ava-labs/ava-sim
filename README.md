@@ -62,7 +62,7 @@ NodeID-GWPcbFJZFfZreETSoWjPimr846mXEKCtu: http://127.0.0.1:9656/ext/bc/28TtJ7sdY
 NodeID-P7oB2McjBGgW2NXXWVYjV8JEDFoW9xDE5: http://127.0.0.1:9658/ext/bc/28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
 ```
 
-You can view a full list of methods you can use to interact with Subnet-EVM [here](https://docs.avax.network/build/avalanchego-apis/contract-chain-c-chain-api). Getting the current block height is a good starter:
+You can view a full list of methods you can use to interact with `Subnet-EVM` [here](https://docs.avax.network/build/avalanchego-apis/contract-chain-c-chain-api). Getting the current block height is a good starter:
 ```txt
 curl -X POST --data '{
     "jsonrpc": "2.0",
@@ -92,7 +92,7 @@ _This private key is associated with the address `0x8db97C7cEcE249c2b98bDC0226Cc
 
 ##### Send Transaction
 Once you've added your network and imported the address with all the funds, you
-can send a transaction like you normally would in MetaMask. Enjoy!
+can send a transaction like you normally would in MetaMask. Have fun!
 
 ### Example: [TimestampVM](https://github.com/ava-labs/timestampvm)
 For those that have yet to create their own VM, you can run `./scripts/timestampvm.sh` to start your own network + subnet running the `TimestampVM`. After initial network startup,

@@ -24,7 +24,6 @@ cat <<EOF > $subnetevm_genesis_path
     "subnetEVMTimestamp": 0,
     "feeConfig": {
       "gasLimit": 8000000,
-      "initialBaseFee": 25000000000,
       "minBaseFee": 25000000000,
       "targetGas": 15000000,
       "baseFeeChangeDenominator": 36,

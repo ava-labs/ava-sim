@@ -123,9 +123,7 @@ custom VM [here](https://docs.avax.network/build/tutorials/platform/create-custo
 curl -X POST --data '{
     "jsonrpc": "2.0",
     "method": "timestampvm.getBlock",
-    "params":{
-        "id":""
-    },
+    "params":{},
     "id": 1
 }' -H 'content-type:application/json;' 127.0.0.1:9650/ext/bc/28TtJ7sdYvdgfj1CcXo5o3yXFMhKLrv4FQC9WhgSHgY6YNYRs2
 ```

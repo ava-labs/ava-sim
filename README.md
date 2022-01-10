@@ -6,7 +6,7 @@
 `ava-sim` makes it easy for anyone to spin up a local instance of an Avalanche network
 to interact with the [standard APIs](https://docs.avax.network/build/avalanchego-apis)
 or to test a [custom
-VM](https://docs.avax.network/build/tutorials/platform/create-custom-blockchain).
+VM](https://docs.avax.network/build/tutorials/platform/subnets/create-custom-blockchain).
 
 ## Prerequisites
 You must have [Golang](https://golang.org/doc/install) >= `1.16` and a configured
@@ -37,7 +37,7 @@ To spin up a 5 node network where all nodes run your custom VM, just run `./scri
 In this command, `[vm]` is the path to your custom VM binary and `[vm-genesis]`
 is the path to your custom VM genesis. You can learn more about writing your
 own VM
-[here](https://docs.avax.network/build/tutorials/platform/create-a-virtual-machine-vm).
+[here](https://docs.avax.network/build/tutorials/platform/subnets/create-a-virtual-machine-vm).
 
 ### Example: [Subnet-EVM](https://github.com/ava-labs/subnet-evm)
 For those that have yet to create their own VM, you can run `./scripts/subnet-evm.sh` to start your own network + subnet running the `Subnet-EVM`. After initial network startup,
@@ -118,7 +118,7 @@ NodeID-P7oB2McjBGgW2NXXWVYjV8JEDFoW9xDE5: http://127.0.0.1:9658/ext/bc/28TtJ7sdY
 ```
 
 You can view a full list of simple methods you can use to interact with the
-custom VM [here](https://docs.avax.network/build/tutorials/platform/create-custom-blockchain#interact-with-the-new-blockchain). Getting the genesis block is a good starter:
+custom VM [here](https://docs.avax.network/build/tutorials/platform/subnets/create-custom-blockchain#interact-with-the-new-blockchain). Getting the genesis block is a good starter:
 ```txt
 curl -X POST --data '{
     "jsonrpc": "2.0",

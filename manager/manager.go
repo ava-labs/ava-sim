@@ -168,7 +168,7 @@ func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
 	)
 
 	for i, url := range nodeURLs {
-		client := info.NewClient(url, constants.HTTPTimeout)
+		client := info.NewClient(url)
 		for {
 			if ctx.Err() != nil {
 				color.Red("stopping bootstrapped check: %v", ctx.Err())
@@ -176,7 +176,7 @@ func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
 			}
 			bootstrapped := true
 			for _, chain := range constants.Chains {
-				chainBootstrapped, _ := client.IsBootstrapped(chain)
+				chainBootstrapped, _ := client.IsBootstrapped(ctx, chain)
 				if !chainBootstrapped {
 					color.Yellow("waiting for %s to bootstrap %s-chain", nodeIDs[i], chain)
 					bootstrapped = false
@@ -187,7 +187,7 @@ func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
 				time.Sleep(waitDiff)
 				continue
 			}
-			if peers, _ := client.Peers(); len(peers) < constants.NumNodes-1 {
+			if peers, _ := client.Peers(ctx); len(peers) < constants.NumNodes-1 {
 				color.Yellow("waiting for %s to connect to all peers (%d/%d)", nodeIDs[i], len(peers), constants.NumNodes-1)
 				time.Sleep(waitDiff)
 				continue

@@ -29,7 +29,7 @@ const (
 	validatorEndDiff   = 30 * 24 * time.Hour // 30 days
 )
 
-func SetupSubnet(ctx context.Context, vmGenesis string) error {
+func SetupSubnet(ctx context.Context, vmID ids.ID, vmGenesis string) error {
 	color.Cyan("creating subnet")
 	var (
 		nodeURLs = manager.NodeURLs()
@@ -131,7 +131,7 @@ func SetupSubnet(ctx context.Context, vmGenesis string) error {
 	}
 	txID, err := client.CreateBlockchain(ctx,
 		userPass, []string{fundedAddress}, fundedAddress, rSubnetID,
-		constants.VMID, []string{}, constants.VMName, genesis,
+		vmID.String(), []string{}, constants.VMName, genesis,
 	)
 	if err != nil {
 		return fmt.Errorf("could not create blockchain: %w", err)

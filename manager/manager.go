@@ -13,6 +13,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/api/info"
 	"github.com/ava-labs/avalanchego/app/process"
+	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/node"
 	"github.com/fatih/color"
 	"golang.org/x/sync/errgroup"
@@ -76,7 +77,7 @@ func NodeURLs() []string {
 	return urls
 }
 
-func StartNetwork(ctx context.Context, vmPath string, bootstrapped chan struct{}) error {
+func StartNetwork(ctx context.Context, vmPath string, vmID ids.ID, bootstrapped chan struct{}) error {
 	dir, err := ioutil.TempDir("", "ava-sim")
 	if err != nil {
 		panic(err)
@@ -86,7 +87,7 @@ func StartNetwork(ctx context.Context, vmPath string, bootstrapped chan struct{}
 		color.Cyan("tmp dir located at: %s", dir)
 	}()
 
-	// Copy files into custom plugins
+	// // Copy files into custom plugins
 	pluginsDir := fmt.Sprintf("%s/plugins", dir)
 	if err := os.MkdirAll(pluginsDir, os.FileMode(constants.FilePerms)); err != nil {
 		panic(err)
@@ -95,7 +96,7 @@ func StartNetwork(ctx context.Context, vmPath string, bootstrapped chan struct{}
 		panic(err)
 	}
 	if len(vmPath) > 0 {
-		if err := utils.CopyFile(vmPath, fmt.Sprintf("%s/%s", pluginsDir, constants.VMID)); err != nil {
+		if err := utils.CopyFile(vmPath, fmt.Sprintf("%s/%s", pluginsDir, vmID.String())); err != nil {
 			panic(err)
 		}
 	}
@@ -168,7 +169,7 @@ func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
 	)
 
 	for i, url := range nodeURLs {
-		client := info.NewClient(url, constants.HTTPTimeout)
+		client := info.NewClient(url)
 		for {
 			if ctx.Err() != nil {
 				color.Red("stopping bootstrapped check: %v", ctx.Err())
@@ -176,7 +177,7 @@ func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
 			}
 			bootstrapped := true
 			for _, chain := range constants.Chains {
-				chainBootstrapped, _ := client.IsBootstrapped(chain)
+				chainBootstrapped, _ := client.IsBootstrapped(ctx, chain)
 				if !chainBootstrapped {
 					color.Yellow("waiting for %s to bootstrap %s-chain", nodeIDs[i], chain)
 					bootstrapped = false
@@ -187,7 +188,7 @@ func checkBootstrapped(ctx context.Context, bootstrapped chan struct{}) error {
 				time.Sleep(waitDiff)
 				continue
 			}
-			if peers, _ := client.Peers(); len(peers) < constants.NumNodes-1 {
+			if peers, _ := client.Peers(ctx); len(peers) < constants.NumNodes-1 {
 				color.Yellow("waiting for %s to connect to all peers (%d/%d)", nodeIDs[i], len(peers), constants.NumNodes-1)
 				time.Sleep(waitDiff)
 				continue

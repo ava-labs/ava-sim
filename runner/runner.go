@@ -204,5 +204,6 @@ func SetupSubnet(ctx context.Context, vmID ids.ID, vmGenesis string) error {
 	for i, url := range nodeURLs {
 		color.Green("%s: %s/ext/bc/%s", nodeIDs[i], url, blockchainID.String())
 	}
+	color.Green("Custom VM ID: %s", vmID)
 	return nil
 }

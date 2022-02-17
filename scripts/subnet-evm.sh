@@ -32,7 +32,8 @@ cat <<EOF > $subnetevm_genesis_path
       "maxBlockGasCost": 1000000,
       "targetBlockRate": 2,
       "blockGasCostStep": 200000
-    }
+    },
+    "allowFeeRecipients": false
   },
   "alloc": {
     "8db97C7cEcE249c2b98bDC0226Cc4C2A57BF52FC": {

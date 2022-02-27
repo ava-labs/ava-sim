@@ -6,7 +6,7 @@
 `ava-sim` makes it easy for anyone to spin up a local instance of an Avalanche network
 to interact with the [standard APIs](https://docs.avax.network/build/avalanchego-apis)
 or to test a [custom
-VM](https://docs.avax.network/build/tutorials/platform/create-custom-blockchain).
+VM](https://docs.avax.network/build/tutorials/platform/subnets/create-custom-blockchain/).
 
 ## Prerequisites
 You must have [Golang](https://golang.org/doc/install) >= `1.16` and a configured

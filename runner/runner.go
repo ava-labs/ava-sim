@@ -15,6 +15,7 @@ import (
 	"github.com/ava-labs/avalanchego/api/keystore"
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/platformvm"
+	platformStatus "github.com/ava-labs/avalanchego/vms/platformvm/status"
 	"github.com/fatih/color"
 )
 
@@ -79,7 +80,7 @@ func SetupSubnet(ctx context.Context, vmGenesis string) error {
 			return ctx.Err()
 		}
 		status, _ := client.GetTxStatus(ctx, subnetIDTx, true)
-		if status.Status == 4 {
+		if status.Status == platformStatus.Committed {
 			break
 		}
 		color.Yellow("waiting for subnet creation tx (%s) to be accepted", subnetIDTx)
@@ -116,7 +117,7 @@ func SetupSubnet(ctx context.Context, vmGenesis string) error {
 				return ctx.Err()
 			}
 			status, _ := client.GetTxStatus(ctx, txID, true)
-			if status.Status == 4 {
+			if status.Status == platformStatus.Committed {
 				break
 			}
 			color.Yellow("waiting for add subnet validator (%s) tx (%s) to be accepted", nodeID, txID)
@@ -143,7 +144,7 @@ func SetupSubnet(ctx context.Context, vmGenesis string) error {
 			return ctx.Err()
 		}
 		status, _ := client.GetTxStatus(ctx, txID, true)
-		if status.Status == 4 {
+		if status.Status == platformStatus.Committed {
 			break
 		}
 		color.Yellow("waiting for create blockchain tx (%s) to be accepted", txID)
@@ -175,7 +176,7 @@ func SetupSubnet(ctx context.Context, vmGenesis string) error {
 				return ctx.Err()
 			}
 			status, _ := nClient.GetBlockchainStatus(ctx, blockchainID.String())
-			if status == 2 {
+			if status == platformStatus.Validating {
 				break
 			}
 			color.Yellow("waiting for validating status for %s", nodeIDs[i])
